@@ -15,15 +15,15 @@ struct MediaMixVBS25App: App {
     
     var body: some Scene {
         WindowGroup {
-            if avPlayerViewModel.isPlaying {
+            /*if avPlayerViewModel.isPlaying {
                 AVPlayerView(viewModel: avPlayerViewModel)
-            } else {
+            } else {*/
                 ContentView()
                     .environment(appModel)
-            }
+            //}
         }
         
-        ImmersiveSpace(id: appModel.immersiveSpaceID) {
+        /*ImmersiveSpace(id: appModel.immersiveSpaceID) {
             ImmersiveView()
                 .environment(appModel)
                 .onAppear {
@@ -35,6 +35,6 @@ struct MediaMixVBS25App: App {
                     avPlayerViewModel.reset()
                 }
         }
-        .immersionStyle(selection: .constant(.full), in: .full)
+        .immersionStyle(selection: .constant(.full), in: .full)*/
     }
 }

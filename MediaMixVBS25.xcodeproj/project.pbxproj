@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F03F5B7C2D21EED90080DE52 /* FereLightSwiftClient in Frameworks */ = {isa = PBXBuildFile; productRef = F03F5B7B2D21EED90080DE52 /* FereLightSwiftClient */; };
 		F0FA2B2A2D1AF5B200A7AB0F /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = F0FA2B292D1AF5B200A7AB0F /* RealityKitContent */; };
 /* End PBXBuildFile section */
 
@@ -57,6 +58,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F03F5B7C2D21EED90080DE52 /* FereLightSwiftClient in Frameworks */,
 				F0FA2B2A2D1AF5B200A7AB0F /* RealityKitContent in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -119,6 +121,7 @@
 			name = MediaMixVBS25;
 			packageProductDependencies = (
 				F0FA2B292D1AF5B200A7AB0F /* RealityKitContent */,
+				F03F5B7B2D21EED90080DE52 /* FereLightSwiftClient */,
 			);
 			productName = MediaMixVBS25;
 			productReference = F0FA2B242D1AF5B200A7AB0F /* MediaMixVBS25.app */;
@@ -175,6 +178,9 @@
 			);
 			mainGroup = F0FA2B1B2D1AF5B200A7AB0F;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F03F5B7A2D21EED90080DE52 /* XCRemoteSwiftPackageReference "ferelight-swift-client" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F0FA2B252D1AF5B200A7AB0F /* Products */;
 			projectDirPath = "";
@@ -472,7 +478,23 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		F03F5B7A2D21EED90080DE52 /* XCRemoteSwiftPackageReference "ferelight-swift-client" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Spiess/ferelight-swift-client";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
+		F03F5B7B2D21EED90080DE52 /* FereLightSwiftClient */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F03F5B7A2D21EED90080DE52 /* XCRemoteSwiftPackageReference "ferelight-swift-client" */;
+			productName = FereLightSwiftClient;
+		};
 		F0FA2B292D1AF5B200A7AB0F /* RealityKitContent */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RealityKitContent;

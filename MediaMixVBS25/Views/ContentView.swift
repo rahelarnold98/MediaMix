@@ -5,7 +5,7 @@
 //  Created by Rahel Arnold on 24.12.2024.
 //
 
-import SwiftUI
+/*import SwiftUI
 import RealityKit
 
 struct ContentView: View {
@@ -20,4 +20,14 @@ struct ContentView: View {
 #Preview(windowStyle: .automatic) {
     ContentView()
         .environment(AppModel())
+}*/
+
+import SwiftUI
+
+struct ContentView: View {
+    var body: some View {
+        QuerySystemView()
+    }
 }
+
+
