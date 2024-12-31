@@ -10,31 +10,20 @@ import SwiftUI
 @main
 struct MediaMixVBS25App: App {
     
-    @State private var appModel = AppModel()
-    @State private var avPlayerViewModel = AVPlayerViewModel()
-    
-    var body: some Scene {
-        WindowGroup {
-            /*if avPlayerViewModel.isPlaying {
-                AVPlayerView(viewModel: avPlayerViewModel)
-            } else {*/
-                ContentView()
-                    .environment(appModel)
-            //}
+    @StateObject private var resultsManager = ResultsManager()
+
+        var body: some Scene {
+            WindowGroup("Main Window") {
+                QuerySystemView()
+                    .environmentObject(resultsManager)
+            }.defaultSize(width: 800, height: 600)
+
+            WindowGroup("Results Window", id: "resultsWindow") {
+                        ResultsView()
+                            .environmentObject(resultsManager)
+                    }
+                    .defaultSize(width: 800, height: 600) // Set an appropriate size for visionOS
         }
-        
-        /*ImmersiveSpace(id: appModel.immersiveSpaceID) {
-            ImmersiveView()
-                .environment(appModel)
-                .onAppear {
-                    appModel.immersiveSpaceState = .open
-                    avPlayerViewModel.play()
-                }
-                .onDisappear {
-                    appModel.immersiveSpaceState = .closed
-                    avPlayerViewModel.reset()
-                }
-        }
-        .immersionStyle(selection: .constant(.full), in: .full)*/
+               
     }
-}
+

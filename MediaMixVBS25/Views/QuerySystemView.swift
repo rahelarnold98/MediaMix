@@ -1,27 +1,22 @@
 import SwiftUI
 import FereLightSwiftClient
 
-struct QueryResult: Identifiable {
-    var segmentId: String
-    let score: Double
-
-    // Identifiable requirement
-    var id: String { segmentId }
-}
+import SwiftUI
 
 struct QuerySystemView: View {
-    @State private var selectedDatabase: String = "v3c" // Default database
-    @State private var queryText: String = "" // User input for similarity/ASR text
-    @State private var results: [QueryResult] = []
+    @EnvironmentObject var resultsManager: ResultsManager
+    @State private var selectedDatabase: String = "v3c"
+    @State private var queryText: String = ""
     @State private var errorMessage: String?
     @State private var isLoading: Bool = false
-    @State private var showResultsWindow: Bool = false // Controls the results window
+    @Environment(\.openWindow) var openWindow
 
-    private let client = FereLightClient(url: URL(string: "http://localhost:8080")!) // Update host/port as needed
+    private var client: FereLightClient {
+        FereLightClient(url: URL(string: ConfigurationManager.shared.apiBaseURL)!)
+    }
 
     var body: some View {
         VStack(alignment: .center, spacing: 20) {
-            // Query Menu
             Text("Select Query")
                 .font(.headline)
 
@@ -63,32 +58,21 @@ struct QuerySystemView: View {
             .frame(height: 44)
             .padding(.horizontal)
 
-            // Loading Indicator
             if isLoading {
                 ProgressView("Loading...")
-                    .padding()
             }
 
-            // Error Message
             if let error = errorMessage {
                 Text("Error: \(error)")
                     .foregroundColor(.red)
             }
         }
         .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(16)
-        .shadow(radius: 10)
-        .sheet(isPresented: $showResultsWindow) {
-            ResultsView(results: results)
-                .frame(width: 500, height: 300) // Set size for the new results window
-        }
     }
 
     private func performQuery(similarityText: String?, ocrText: String?) {
         isLoading = true
         errorMessage = nil
-        results = []
 
         Task {
             do {
@@ -99,48 +83,20 @@ struct QuerySystemView: View {
                     limit: 10
                 )
 
-                // Map the query results and present the results window
                 await MainActor.run {
-                    self.results = queryResults.map { result in
-                        QueryResult(
-                            segmentId: result.segmentId,
-                            score: result.score
-                        )
-                    }
-                    self.isLoading = false
-                    self.showResultsWindow = true // Show the results window
+                    resultsManager.results = queryResults.map { QueryResult(segmentId: $0.segmentId, score: $0.score) }
+                    isLoading = false
+
+                    // Trigger the opening of the Results Window
+                    openWindow(id: "resultsWindow")
+
                 }
             } catch {
                 await MainActor.run {
-                    self.errorMessage = error.localizedDescription
-                    self.isLoading = false
+                    errorMessage = "Error: \(error.localizedDescription)"
+                    isLoading = false
                 }
             }
         }
-    }
-}
-
-struct ResultsView: View {
-    let results: [QueryResult]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Results")
-                .font(.headline)
-                .padding()
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(results) { result in
-                        Text("Segment ID: \(result.segmentId) - Confidence: \(result.score, specifier: "%.2f")")
-                    }
-                }
-                .padding()
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemBackground))
-        .cornerRadius(16)
-        .padding()
     }
 }
