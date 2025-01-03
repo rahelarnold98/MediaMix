@@ -3,24 +3,23 @@ import FereLightSwiftClient
 
 struct ResultsView: View {
     @EnvironmentObject var resultsManager: ResultsManager
-    @State private var segmentInfos: [String: (objectId: String, segmentNumber: Int, segmentStart: Int, segmentEnd: Int, segmentStartAbs: Double, segmentEndAbs: Double)] = [:]
     @State private var isLoading = true
+    @State private var detailedSegments: [DetailedSegment] = []
 
     private var client: FereLightClient {
         FereLightClient(url: URL(string: ConfigurationManager.shared.apiBaseURL)!)
     }
 
     var body: some View {
-        ScrollView { // Enables scrolling
-            LazyVStack(alignment: .leading) { // Efficient layout for dynamic content
+        ScrollView {
+            LazyVStack(alignment: .leading) {
                 if isLoading {
                     ProgressView("Loading data...")
                         .padding()
                 } else {
-                    ForEach(resultsManager.results, id: \.segmentId) { result in
+                    ForEach(detailedSegments) { segment in
                         HStack {
-                            if let segmentInfo = segmentInfos[result.segmentId],
-                               let imageUrl = generateImageUrl(objectId: segmentInfo.objectId, segmentId: result.segmentId) {
+                            if let imageUrl = generateImageUrl(objectId: segment.objectId, segmentId: segment.segmentId) {
                                 AsyncImage(url: imageUrl) { image in
                                     image
                                         .resizable()
@@ -30,19 +29,21 @@ struct ResultsView: View {
                                     ProgressView()
                                 }
                             } else {
-                                ProgressView() // Placeholder while data is being loaded
+                                ProgressView()
                             }
 
                             VStack(alignment: .leading) {
-                                Text(result.segmentId)
-                                Text("Score: \(result.score, specifier: "%.2f")")
+                                Text(segment.segmentId)
+                                Text("Score: \(segment.score, specifier: "%.2f")")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
+                                Text("Segment Number: \(segment.segmentNumber)")
+                                Text("Start: \(segment.segmentStart), End: \(segment.segmentEnd)")
                             }
                             Spacer()
                         }
                         .padding()
-                        Divider() // Optional: Adds a separator between items
+                        Divider()
                     }
                 }
             }
@@ -50,29 +51,42 @@ struct ResultsView: View {
         }
         .navigationTitle("Query Results")
         .task {
-            await fetchSegmentInfos()
+            await fetchDetailedSegments()
         }
     }
 
-    // Fetch segment information using the client
-    private func fetchSegmentInfos() async {
+    // Fetch detailed segments
+    private func fetchDetailedSegments() async {
         do {
-            let segmentIds = resultsManager.results.map { $0.segmentId }
+            isLoading = true
+            let results = resultsManager.results
+            let segmentIds = results.map { $0.segmentId }
+
             let fetchedInfos = try await client.getSegmentInfos(database: "mvk", segmentIds: segmentIds)
 
-            // Map results for easier access
-            let infoDictionary = Dictionary(
-                uniqueKeysWithValues: fetchedInfos.map { info in
-                    (info.segmentId, (objectId: info.objectId, segmentNumber: info.segmentNumber, segmentStart: info.segmentStart, segmentEnd: info.segmentEnd, segmentStartAbs: info.segmentStartAbs, segmentEndAbs: info.segmentEndAbs))
+            // Combine `results` and `fetchedInfos`
+            let detailedSegments = results.compactMap { result -> DetailedSegment? in
+                guard let info = fetchedInfos.first(where: { $0.segmentId == result.segmentId }) else {
+                    return nil
                 }
-            )
+                return DetailedSegment(
+                    segmentId: result.segmentId,
+                    score: result.score,
+                    objectId: info.objectId,
+                    segmentNumber: info.segmentNumber,
+                    segmentStart: info.segmentStart,
+                    segmentEnd: info.segmentEnd,
+                    segmentStartAbs: info.segmentStartAbs,
+                    segmentEndAbs: info.segmentEndAbs
+                )
+            }
+
             DispatchQueue.main.async {
-                self.segmentInfos = infoDictionary
+                self.detailedSegments = detailedSegments
                 self.isLoading = false
             }
         } catch {
-            // Handle errors (e.g., show an alert)
-            print("Failed to fetch segment infos: \(error)")
+            print("Failed to fetch detailed segments: \(error)")
             DispatchQueue.main.async {
                 self.isLoading = false
             }
