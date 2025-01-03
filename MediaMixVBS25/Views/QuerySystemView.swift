@@ -80,10 +80,11 @@ struct QuerySystemView: View {
                     database: selectedDatabase,
                     similarityText: similarityText,
                     ocrText: ocrText,
-                    limit: 10
+                    limit: 1000
                 )
 
                 await MainActor.run {
+                    resultsManager.database = selectedDatabase
                     resultsManager.results = queryResults.map { QueryResult(segmentId: $0.segmentId, score: $0.score) }
                     isLoading = false
 
