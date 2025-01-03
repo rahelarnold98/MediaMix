@@ -49,7 +49,7 @@ struct ResultsView: View {
                         .onTapGesture {
                             selectedSegment = segment
                             print("Selected segment: \(selectedSegment?.segmentId ?? "None")") // Debug the state update
-                            showVideoPlayer = true
+                            showVideoPlayer.toggle()
                         }
                         Divider()
                     }
@@ -62,10 +62,17 @@ struct ResultsView: View {
             await fetchDetailedSegments()
         }
         .sheet(item: $selectedSegment) { segment in
-            VideoPlayerView(videoUrl: generateVideoUrl(objectId: segment.objectId))
+            VStack {
+                        VideoPlayerView(videoUrl: generateVideoUrl(objectId: segment.objectId))
+                        Button("Dismiss") {
+                            selectedSegment = nil // Clear the selected segment to dismiss the sheet
+                        }
+                        .padding()
+                    }
         }
+        
     }
-
+  
     private func fetchDetailedSegments() async {
         do {
             isLoading = true
@@ -117,7 +124,6 @@ struct ResultsView: View {
         return URL(string: urlString)!
     }
 }
-
 
 struct VideoPlayerView: View {
     let videoUrl: URL
