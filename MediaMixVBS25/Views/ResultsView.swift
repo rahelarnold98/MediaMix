@@ -1,10 +1,13 @@
 import SwiftUI
+import AVKit
 import FereLightSwiftClient
 
 struct ResultsView: View {
     @EnvironmentObject var resultsManager: ResultsManager
     @State private var isLoading = true
     @State private var detailedSegments: [DetailedSegment] = []
+    @State private var selectedSegment: DetailedSegment? // To track the selected segment for the popup
+    @State private var showVideoPlayer = false // To control the sheet for the video player
 
     private var client: FereLightClient {
         FereLightClient(url: URL(string: ConfigurationManager.shared.apiBaseURL)!)
@@ -43,6 +46,11 @@ struct ResultsView: View {
                             Spacer()
                         }
                         .padding()
+                        .onTapGesture {
+                            selectedSegment = segment
+                            print("Selected segment: \(selectedSegment?.segmentId ?? "None")") // Debug the state update
+                            showVideoPlayer = true
+                        }
                         Divider()
                     }
                 }
@@ -53,9 +61,11 @@ struct ResultsView: View {
         .task {
             await fetchDetailedSegments()
         }
+        .sheet(item: $selectedSegment) { segment in
+            VideoPlayerView(videoUrl: generateVideoUrl(objectId: segment.objectId))
+        }
     }
 
-    // Fetch detailed segments
     private func fetchDetailedSegments() async {
         do {
             isLoading = true
@@ -64,7 +74,6 @@ struct ResultsView: View {
 
             let fetchedInfos = try await client.getSegmentInfos(database: "mvk", segmentIds: segmentIds)
 
-            // Combine `results` and `fetchedInfos`
             let detailedSegments = results.compactMap { result -> DetailedSegment? in
                 guard let info = fetchedInfos.first(where: { $0.segmentId == result.segmentId }) else {
                     return nil
@@ -93,10 +102,44 @@ struct ResultsView: View {
         }
     }
 
-    // Helper function to generate the image URL
     private func generateImageUrl(objectId: String, segmentId: String) -> URL? {
         let baseURL = "http://localhost:8000/mvk/thumbnails/"
         let urlString = "\(baseURL)\(objectId)/\(segmentId).jpg"
         return URL(string: urlString)
+    }
+
+    private func generateVideoUrl(objectId: String) -> URL {
+        let baseURL = "http://localhost:8000/mvk/videos/"
+        let startIndex = objectId.index(objectId.startIndex, offsetBy: 2)
+        let trimmedObjectId = objectId[startIndex...]
+        let urlString = "\(baseURL)\(trimmedObjectId).mp4"
+        print("Generated video URL: \(urlString)") // Debug output
+        return URL(string: urlString)!
+    }
+}
+
+
+struct VideoPlayerView: View {
+    let videoUrl: URL
+
+    var body: some View {
+        VStack {
+            if videoUrl.absoluteString.isEmpty {
+                Text("Invalid video URL")
+                    .foregroundColor(.red)
+                    .font(.headline)
+            } else {
+                VideoPlayer(player: AVPlayer(url: videoUrl))
+                    .onAppear {
+                        print("Attempting to play video from URL: \(videoUrl)")
+                    }
+                    .onDisappear {
+                        print("Video playback ended.")
+                    }
+                    .background(Color.black)
+                    .edgesIgnoringSafeArea(.all)
+            }
+        }
+        .background(Color.black.opacity(0.9))
     }
 }
