@@ -11,40 +11,44 @@ struct ResultsView: View {
     }
 
     var body: some View {
-        VStack {
-            if isLoading {
-                ProgressView("Loading data...")
-            } else {
-                List(resultsManager.results, id: \.segmentId) { result in
-                    HStack {
-                        if let segmentInfo = segmentInfos[result.segmentId],
-                           let imageUrl = generateImageUrl(objectId: segmentInfo.objectId, segmentId: result.segmentId) {
-                            AsyncImage(url: imageUrl) { image in
-                                image
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 100, height: 100)
-                            } placeholder: {
-                                ProgressView()
+        ScrollView { // Enables scrolling
+            LazyVStack(alignment: .leading) { // Efficient layout for dynamic content
+                if isLoading {
+                    ProgressView("Loading data...")
+                        .padding()
+                } else {
+                    ForEach(resultsManager.results, id: \.segmentId) { result in
+                        HStack {
+                            if let segmentInfo = segmentInfos[result.segmentId],
+                               let imageUrl = generateImageUrl(objectId: segmentInfo.objectId, segmentId: result.segmentId) {
+                                AsyncImage(url: imageUrl) { image in
+                                    image
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 100, height: 100)
+                                } placeholder: {
+                                    ProgressView()
+                                }
+                            } else {
+                                ProgressView() // Placeholder while data is being loaded
                             }
-                        } else {
-                            ProgressView() // Placeholder while data is being loaded
-                        }
 
-                        VStack(alignment: .leading) {
-                            Text(result.segmentId)
-                            Text("Score: \(result.score, specifier: "%.2f")")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
+                            VStack(alignment: .leading) {
+                                Text(result.segmentId)
+                                Text("Score: \(result.score, specifier: "%.2f")")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
                         }
-                        Spacer()
+                        .padding()
+                        Divider() // Optional: Adds a separator between items
                     }
-                    .padding()
                 }
-                .navigationTitle("Query Results")
-                .padding()
             }
+            .padding()
         }
+        .navigationTitle("Query Results")
         .task {
             await fetchSegmentInfos()
         }
@@ -74,7 +78,6 @@ struct ResultsView: View {
             }
         }
     }
-
 
     // Helper function to generate the image URL
     private func generateImageUrl(objectId: String, segmentId: String) -> URL? {
